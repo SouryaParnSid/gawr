@@ -1,0 +1,532 @@
+/* Gawr AI - Advanced animations and effects */
+
+/* Text gradient effect for headings */
+.gradient-text {
+    background: linear-gradient(90deg, var(--primary-color), #844fff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+    position: relative;
+}
+
+/* Gradient border effect */
+.gradient-border {
+    position: relative;
+    border-radius: var(--border-radius);
+    background: var(--glass-bg);
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(135deg, var(--primary-color), #844fff);
+    border-radius: calc(var(--border-radius) + 1px);
+    z-index: -1;
+    opacity: 0.7;
+}
+
+/* Welcome message animation */
+.welcome-message {
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+.welcome-message::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) rotate(30deg); }
+    100% { transform: translateX(100%) rotate(30deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Bot typing animation */
+.typing-wave {
+    display: flex;
+    align-items: flex-end;
+    height: 20px;
+}
+
+.typing-wave .wave-dot {
+    width: 4px;
+    height: 4px;
+    margin: 0 2px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: wave-animation 1s infinite;
+    transition: background 0.3s ease;
+}
+
+.typing-wave .wave-dot:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.typing-wave .wave-dot:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.typing-wave .wave-dot:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.typing-wave .wave-dot:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+@keyframes wave-animation {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+/* Hover card effect */
+.hover-card {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform: translateY(0) rotateZ(0);
+    box-shadow: 0 5px 15px rgba(108, 99, 255, 0.1);
+}
+
+.hover-card:hover {
+    transform: translateY(-5px) rotateZ(1deg);
+    box-shadow: 0 12px 30px rgba(108, 99, 255, 0.15);
+}
+
+/* Pulse animation */
+.pulse {
+    position: relative;
+}
+
+.pulse::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(108, 99, 255, 0.3);
+    border-radius: inherit;
+    z-index: -1;
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    70% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Floating element animation */
+.floating {
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* Button hover effect */
+.btn-hover-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hover-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transition: left 0.6s ease;
+}
+
+.btn-hover-effect:hover::before {
+    left: 100%;
+}
+
+/* Glow effect */
+.glow {
+    position: relative;
+}
+
+.glow::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(45deg, var(--primary-color), #844fff, var(--primary-color));
+    filter: blur(15px);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.glow:hover::after {
+    opacity: 0.7;
+}
+
+/* Subtle shake animation */
+.shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    
+    20%, 80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    
+    30%, 50%, 70% {
+        transform: translate3d(-3px, 0, 0);
+    }
+    
+    40%, 60% {
+        transform: translate3d(3px, 0, 0);
+    }
+}
+
+/* Responsive scaling animation */
+.scale-on-hover {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.scale-on-hover:hover {
+    transform: scale(1.05);
+}
+
+/* Text fade-in animation */
+.fade-in-text {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInText 0.8s forwards;
+}
+
+@keyframes fadeInText {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger multiple elements with delay */
+.stagger-in > * {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: staggerIn 0.5s forwards;
+}
+
+.stagger-in > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-in > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-in > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-in > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-in > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-in > *:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes staggerIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Spotlight effect */
+.spotlight {
+    position: relative;
+    overflow: hidden;
+}
+
+.spotlight::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.3) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.spotlight:hover::before {
+    opacity: 1;
+}
+
+/* Rainbow text for special elements */
+.rainbow-text {
+    background-image: linear-gradient(
+        to right,
+        #ff8a00,
+        #e52e71,
+        #6c63ff,
+        #38bdae,
+        #ff8a00
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow 6s linear infinite;
+}
+
+@keyframes rainbow {
+    to {
+        background-position: 200% center;
+    }
+}
+
+/* Loading dots animation */
+.loading-dots:after {
+    content: '.';
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+}
+
+/* Focus glow for accessibility */
+.focus-glow:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.5);
+}
+
+/* Badge effect */
+.badge {
+    position: relative;
+}
+
+.badge::after {
+    content: attr(data-badge);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 12px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Animations for Get Started section */
+.step {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: step-fade-in 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+.step:nth-child(1) { animation-delay: 0.1s; }
+.step:nth-child(2) { animation-delay: 0.2s; }
+.step:nth-child(3) { animation-delay: 0.3s; }
+.step:nth-child(4) { animation-delay: 0.4s; }
+.step:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes step-fade-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-content {
+    position: relative;
+}
+
+.step-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: rgba(108, 99, 255, 0.03);
+    z-index: -1;
+    transition: width 0.3s ease;
+    border-radius: var(--border-radius);
+}
+
+.step-content:hover::before {
+    width: 100%;
+}
+
+/* The custom cursor has been removed */
+
+/* Interactive wave background */
+.wave-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.wave-bg canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Floating labels */
+.floating-label {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.floating-label input, 
+.floating-label textarea {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-sm);
+    background: var(--glass-bg);
+    transition: all 0.3s ease;
+}
+
+.floating-label label {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 16px;
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    background: transparent;
+}
+
+.floating-label input:focus,
+.floating-label textarea:focus,
+.floating-label input:not(:placeholder-shown),
+.floating-label textarea:not(:placeholder-shown) {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(125, 95, 255, 0.1);
+}
+
+.floating-label input:focus + label,
+.floating-label textarea:focus + label,
+.floating-label input:not(:placeholder-shown) + label,
+.floating-label textarea:not(:placeholder-shown) + label {
+    top: -10px;
+    left: 10px;
+    font-size: 12px;
+    padding: 0 5px;
+    color: var(--primary-color);
+    background: var(--background-color);
+}
+
+/* Particle effect */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particle-animation 1s ease-out forwards;
+}
+
+@keyframes particle-animation {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* 3D Tilt card effect */
+.tilt-card {
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
+    transition: transform 0.3s ease;
+}
+
+.tilt-card .tilt-content {
+    transform: translateZ(20px);
+    transition: transform 0.3s ease;
+}
+
+/* Typewriter effect */
+.typewriter {
+    overflow: hidden;
+    border-right: 3px solid var(--primary-color);
+    white-space: nowrap;
+    margin: 0 auto;
+    letter-spacing: 0.15em;
+    animation: 
+        typing 3.5s steps(40, end),
+        blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--primary-color) }
+} 

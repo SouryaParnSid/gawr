@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reloading Gawr AI...</title>
+    <style>
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #6c63ff 0%, #844fff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 16px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .counter {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>Refreshing Gawr AI</h1>
+        <p>Clearing cached data and reloading the application...</p>
+        <p>This will fix most display issues and ensure you have the latest version.</p>
+        <div class="counter" id="counter">Redirecting in 5 seconds...</div>
+    </div>
+
+    <script>
+        // Clear all cache data
+        function clearCaches() {
+            // Clear application cache
+            if (window.applicationCache) {
+                try {
+                    window.applicationCache.swapCache();
+                } catch (e) {
+                    console.log('Application cache already empty');
+                }
+            }
+            
+            // Clear service worker caches
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) {
+                        caches.delete(name);
+                    });
+                });
+            }
+            
+            // Unregister service workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            
+            // Clear localStorage items related to the app
+            try {
+                localStorage.removeItem('theme');
+                localStorage.removeItem('autoSpeak');
+                localStorage.removeItem('microphonePermissionDenied');
+                // Don't clear chat history or other user data
+            } catch (e) {
+                console.log('Error clearing localStorage:', e);
+            }
+            
+            // Clear session storage
+            try {
+                sessionStorage.clear();
+            } catch (e) {
+                console.log('Error clearing sessionStorage:', e);
+            }
+        }
+        
+        // Start countdown and redirect
+        function startCountdown() {
+            let count = 5;
+            const countElement = document.getElementById('counter');
+            
+            const interval = setInterval(function() {
+                count--;
+                if (count <= 0) {
+                    clearInterval(interval);
+                    // Add cache-busting parameter to force a complete reload
+                    window.location.href = '/?refresh=' + Date.now();
+                } else {
+                    countElement.textContent = `Redirecting in ${count} second${count === 1 ? '' : 's'}...`;
+                }
+            }, 1000);
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            clearCaches();
+            startCountdown();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#7d5fff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Gawr AI Assistant | Sourya Sarkar</title>
+    <!-- Critical CSS first for immediate sidebar rendering -->
+    <link rel="stylesheet" href="critical-styles.css">
+    <link rel="stylesheet" href="animations.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS specific -->
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-startup-image" href="icons/splash.png">
+    
+    <!-- Load microphone fix script early -->
+    <script src="mic-fix.js"></script>
+    
+    <!-- Load deployment fix script for handling connection issues -->
+    <script src="deployment-fix.js"></script>
+    
+    <!-- Prevent FOUC (Flash of Unstyled Content) -->
+    <style>
+        .sidebar { background: #7d5fff !important; color: #ffffff !important; }
+        .sidebar a, .sidebar h2, .sidebar p, .sidebar i { color: #ffffff !important; }
+        .nav-links li.active { border-left-color: #ffffff !important; background: rgba(255, 255, 255, 0.15) !important; }
+        
+        /* Fix for voice input button visibility */
+        #voice-input-button {
+            display: flex !important;
+            width: 45px !important;
+            height: 45px !important;
+            border-radius: 50% !important;
+            background: rgba(125, 95, 255, 0.1) !important;
+            color: #7d5fff !important;
+            border: 1px solid rgba(125, 95, 255, 0.3) !important;
+            margin-right: 10px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: 10 !important;
+            cursor: pointer !important;
+        }
+        
+        /* Make sure the voice status is initially hidden */
+        .voice-status {
+            display: none !important;
+        }
+        
+        /* Debug styling to see elements */
+        .chat-input-container {
+            display: flex !important;
+            align-items: center !important;
+            padding: 15px !important;
+            position: relative !important;
+            width: 100% !important;
+        }
+        
+        /* Always show the microphone icon */
+        .fa-microphone {
+            display: inline-block !important;
+            visibility: visible !important;
+        }
+        
+        /* Critical scrolling fixes */
+        html, body {
+            overflow-y: auto !important;
+            height: 100% !important;
+            position: relative !important;
+            overscroll-behavior: contain;
+        }
+        
+        .container, .content, .app-container {
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100% !important;
+            position: relative !important;
+        }
+        
+        .chat-container {
+            display: block !important;
+            opacity: 1 !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        .chat-interface {
+            height: 65vh !important;
+            max-height: 700px !important;
+            min-height: 400px !important;
+            display: flex !important;
+            overflow: hidden !important;
+        }
+        
+        .messages-container {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+            padding-bottom: 20px !important;
+        }
+        
+        /* Fix iOS momentum scrolling */
+        * {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Enable scrolling for all feature cards container */
+        .features-grid, .steps-container {
+            overflow-y: auto !important;
+            height: auto !important;
+        }
+        
+        /* Fix for mobile */
+        @media (max-width: 768px) {
+            .chat-interface {
+                height: 60vh !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-interface {
+                height: 70vh !important;
+            }
+        }
+    </style>
+</head>
+<body class="smart-cursor-area">
+    <!-- Interactive wave background -->
+    <div class="wave-bg" id="wave-background"></div>
+    
+    <!-- Floating background shapes -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+    </div>
+    
+    <div class="container">
+        <!-- Mobile menu toggle button -->
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon pulse">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h2>Gawr<span class="gradient-text">AI</span></h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active"><a href="#"><i class="fas fa-comments"></i><span>Chat</span></a></li>
+                <li><a href="#about"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+                <li><a href="#features"><i class="fas fa-star"></i><span>Features</span></a></li>
+                <li><a href="#get-started"><i class="fas fa-play-circle"></i><span>Get Started</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="https://github.com/SouryaS/p1" target="_blank"><i class="fab fa-github"></i></a>
+                <p>Powered by Gawr AI</p>
+            </div>
+        </nav>
+
+        <main class="content">
+            <div class="app-container">
+                <div class="chat-container active" id="chat-section">
+                    <header class="chat-header">
+                        <h1>Chat with Gawr AI</h1>
+                        <div class="status">
+                            <span class="status-dot online"></span>
+                            <span class="status-text">Online</span>
+                        </div>
+                    </header>
+                    
+                    <div class="chat-interface">
+                        <div class="messages-container" id="messages-container">
+                            <div class="bot-message welcome-message">
+                                <div class="bot-avatar spotlight hover-effect">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content gradient-border">
+                                    <p class="typewriter">Hello! I'm <span class="gradient-text">Gawr AI</span>, your friendly AI assistant. How can I help you today?</p>
+                                </div>
+                                <div class="message-actions">
+                                    <button class="speak-btn hover-card hover-effect" title="Listen to this message">
+                                        <i class="fas fa-volume-up"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container btn-hover-effect hover-effect">
+                            <button id="voice-input-button" class="voice-input-button scale-on-hover hover-effect" aria-label="Use voice input">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <div class="floating-label flex-grow">
+                                <textarea id="message-input" class="message-input focus-glow" placeholder=" " rows="1"></textarea>
+                                <label for="message-input">Type your message here...</label>
+                            </div>
+                            <button id="send-button" class="send-button glow hover-effect" aria-label="Send message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div id="voice-status" class="voice-status">
+                            <div class="voice-pulse"></div>
+                            <p>Listening...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-info">
+                        <div class="info-card">
+                            <i class="fas fa-lock"></i>
+                            <p>Your conversations are private</p>
+                        </div>
+                        <div class="info-card">
+                            <i class="fas fa-sync-alt"></i>
+                            <p>AI powered by Google's Generative AI</p>
+                        </div>
+                        <div class="info-card">
+                            <i class="fas fa-volume-up"></i>
+                            <p>Voice input and output enabled</p>
+                        </div>
+                        <div class="speech-toggle-container">
+                            <label class="speech-toggle-label" for="auto-speak-toggle">
+                                <input type="checkbox" id="auto-speak-toggle" class="speech-toggle-input">
+                                <span class="speech-toggle"></span>
+                                Auto-speak responses
+                            </label>
+                        </div>
+                        <button id="clear-chat-btn" class="reload-btn" aria-label="Clear chat history">
+                            <i class="fas fa-trash"></i> Clear Chat
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="info-container" id="about">
+                    <h2><i class="fas fa-info-circle"></i> About Gawr AI</h2>
+                    <div class="info-content">
+                        <div class="info-text">
+                            <h3>The Next Generation of Conversational AI</h3>
+                            <p>Engage in natural, flowing conversations with one of the world's most advanced AI systems. Built with Flask and Google's Generative AI technology, this chatbot provides a seamless, intuitive interface for asking questions, generating content, and exploring the capabilities of modern AI.</p>
+                            <p>Gawr AI represents the cutting edge of language model technology, bringing powerful cognitive abilities and natural language understanding to your fingertips.</p>
+                        </div>
+                        <div class="model-card">
+                            <div class="model-header">
+                                <h4>Gawr AI</h4>
+                                <span class="model-badge">Advanced Model</span>
+                            </div>
+                            <div class="model-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Response Time</span>
+                                    <span class="stat-value">Ultra Fast</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Capabilities</span>
+                                    <span class="stat-value">Advanced</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Interface</span>
+                                    <span class="stat-value">Native Web</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-container" id="features">
+                    <h2><i class="fas fa-star"></i> Key Features</h2>
+                    <div class="features-grid stagger-in">
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-comments"></i></div>
+                                <h3>Fast Responses</h3>
+                                <p>Get quick answers to your questions without any delays</p>
+                            </div>
+                        </div>
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                                <h3>Advanced AI</h3>
+                                <p>Powered by Google's Gemini Pro language model</p>
+                            </div>
+                        </div>
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+                                <h3>Voice Interactions</h3>
+                                <p>Speak to Gawr AI and listen to responses naturally</p>
+                            </div>
+                        </div>
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                                <h3>Secure by Design</h3>
+                                <p>Enhanced API key protection with zero hardcoded secrets</p>
+                            </div>
+                        </div>
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-history"></i></div>
+                                <h3>Conversation History</h3>
+                                <p>Review your entire chat session at a glance</p>
+                            </div>
+                        </div>
+                        <div class="feature-card tilt-card hover-effect" data-tilt>
+                            <div class="tilt-content">
+                                <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <h3>Mobile Optimized</h3>
+                                <p>Fully responsive design that works on all devices</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-container" id="get-started">
+                    <h2><i class="fas fa-play-circle"></i> Get Started</h2>
+                    <div class="steps-container">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Set Up Your Environment</h3>
+                                <p>First, make sure you have Python 3.8+ installed on your system.</p>
+                                <div class="code-block">
+                                    <code>python --version</code>
+                                    <button class="copy-btn" data-clipboard-text="python --version">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                                <p>We recommend creating a virtual environment:</p>
+                                <div class="code-block">
+                                    <code>python -m venv venv
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate</code>
+                                    <button class="copy-btn" data-clipboard-text="python -m venv venv">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Clone and Install</h3>
+                                <p>Clone the repository and install required packages:</p>
+                                <div class="code-block">
+                                    <code>git clone https://github.com/SouryaS/gawr.git
+cd gawr
+pip install -r requirements.txt</code>
+                                    <button class="copy-btn" data-clipboard-text="git clone https://github.com/SouryaS/gawr.git && cd gawr && pip install -r requirements.txt">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Configure Google AI API Key</h3>
+                                <p>Get your API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a> and set it up:</p>
+                                <div class="code-block">
+                                    <code>python create_env.py</code>
+                                    <button class="copy-btn" data-clipboard-text="python create_env.py">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                                <p>When prompted, enter your Google Generative API key. This is stored securely in a .env file.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>Launch the Application</h3>
+                                <p>Start the Gawr AI server using:</p>
+                                <div class="code-block">
+                                    <code>python server.py</code>
+                                    <button class="copy-btn" data-clipboard-text="python server.py">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                                <p>For Windows users, you can also use the included batch file:</p>
+                                <div class="code-block">
+                                    <code>start.bat</code>
+                                    <button class="copy-btn" data-clipboard-text="start.bat">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h3>Troubleshooting</h3>
+                                <p>If you encounter any issues:</p>
+                                <ul>
+                                    <li>Verify your API key is correct and has access to Gemini models</li>
+                                    <li>Check that all dependencies installed correctly</li>
+                                    <li>For browser caching issues, visit <code>http://localhost:8000/refresh.html</code></li>
+                                </ul>
+                                <p>See <a href="TROUBLESHOOTING.md" target="_blank">TROUBLESHOOTING.md</a> for more details.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="starting-note">
+                        <i class="fas fa-lightbulb"></i>
+                        <p>Open your browser at <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> to start chatting with Gawr AI!</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div class="floating-btn spotlight" id="theme-toggle" aria-label="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </div>
+        
+        <!-- Debug status for speech recognition -->
+        <div id="speech-debug" style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 9999; display: none;">
+            Speech Recognition Status
+        </div>
+    </div>
+    
+    <!-- Permissions Helper Modal -->
+    <div id="permissions-modal" class="permissions-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-microphone"></i> Microphone Access Required</h2>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>To use voice features, your browser needs permission to access your microphone.</p>
+                
+                <div class="browser-instructions">
+                    <div class="instruction-section">
+                        <h3>Chrome</h3>
+                        <ol>
+                            <li>Look for the microphone icon in the address bar</li>
+                            <li>Click it and select "Allow"</li>
+                            <li>If you don't see the icon, click the lock/info icon instead</li>
+                            <li>Navigate to Site Settings > Microphone</li>
+                        </ol>
+                        <img src="https://i.imgur.com/8EGVdX4.png" alt="Chrome permission" class="permission-img">
+                    </div>
+                    
+                    <div class="instruction-section">
+                        <h3>Firefox</h3>
+                        <ol>
+                            <li>Look for the microphone icon or permissions icon in the address bar</li>
+                            <li>Click it and select "Allow"</li>
+                            <li>You may need to reload the page</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="instruction-section">
+                        <h3>Safari</h3>
+                        <ol>
+                            <li>In Safari Preferences, navigate to Websites > Microphone</li>
+                            <li>Find this website in the list and select "Allow"</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="instruction-section">
+                        <h3>Edge</h3>
+                        <ol>
+                            <li>Look for the microphone icon in the address bar</li>
+                            <li>Click it and select "Allow"</li>
+                            <li>If you don't see the icon, click the lock icon instead</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="reset-permissions" class="primary-btn">
+                        <i class="fas fa-redo"></i> Reset & Try Again
+                    </button>
+                    <button id="continue-without" class="secondary-btn">
+                        Continue Without Voice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // IMMEDIATE FIX: Ensure body is visible and properly styled
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+        
+        // Ensure UI elements are properly displayed
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force show messages container
+            const messagesContainer = document.getElementById('messages-container');
+            if (messagesContainer) {
+                messagesContainer.style.display = 'flex';
+                messagesContainer.style.opacity = '1';
+            }
+            
+            // Make sure chat interface is visible
+            const chatInterface = document.querySelector('.chat-interface');
+            if (chatInterface) {
+                chatInterface.style.opacity = '1';
+                chatInterface.style.display = 'flex';
+            }
+            
+            // Ensure chat container is displayed
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.style.display = 'block';
+                chatContainer.style.opacity = '1';
+                chatContainer.style.transform = 'translateY(0)';
+            }
+            
+            // Force correct styles for buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.style.opacity = '1';
+                button.style.visibility = 'visible';
+            });
+        });
+        
+        // Fix scrolling issues on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make sure scroll containers are properly configured
+            document.querySelectorAll('.messages-container, .content, .app-container, .container, body, html').forEach(el => {
+                el.style.overflowY = 'auto';
+            });
+            
+            // Check if on iOS device and apply special fix
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+                document.body.style.webkitOverflowScrolling = 'touch';
+                document.querySelectorAll('.messages-container').forEach(el => {
+                    el.style.webkitOverflowScrolling = 'touch';
+                });
+            }
+            
+            // Ensure chat container is visible and scrollable
+            const chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.style.display = 'block';
+                chatContainer.style.opacity = '1';
+                chatContainer.style.transform = 'translateY(0)';
+            }
+            
+            // Fix for message container scrolling
+            const messagesContainer = document.getElementById('messages-container');
+            if (messagesContainer) {
+                messagesContainer.style.overflowY = 'auto';
+                messagesContainer.style.display = 'flex';
+                
+                // Add touch scroll capability
+                messagesContainer.addEventListener('touchstart', function() {
+                    // Enable momentum scrolling on touch start
+                }, { passive: true });
+            }
+            
+            // Fix animation classes that might interfere with scrolling
+            document.querySelectorAll('.animate-in, .feature-card, .step, .info-card, .model-card').forEach(el => {
+                el.classList.add('animate-in');
+                el.style.opacity = '1';
+                el.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+    
+    <!-- Scroll animation script -->
+    <script>
+        // Scroll animation for elements
+        function checkScrollAnimation() {
+            const animateElements = document.querySelectorAll('.feature-card, .step, .info-card, .model-card');
+            
+            animateElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementBottom = element.getBoundingClientRect().bottom;
+                
+                // Check if element is in viewport
+                if (elementTop < window.innerHeight - 100 && elementBottom > 0) {
+                    element.classList.add('animate-in');
+                }
+            });
+        }
+        
+        // Run initially and on scroll
+        window.addEventListener('scroll', checkScrollAnimation);
+        window.addEventListener('load', () => {
+            // Small delay to ensure elements are in place
+            setTimeout(checkScrollAnimation, 300);
+        });
+        
+        // Add animation class to new messages
+        function animateNewMessages() {
+            const messages = document.querySelectorAll('.user-message, .bot-message');
+            
+            messages.forEach(message => {
+                if (!message.classList.contains('animated')) {
+                    message.classList.add('new-message', 'animated');
+                }
+            });
+        }
+        
+        // Add polished interaction to buttons
+        const allButtons = document.querySelectorAll('button');
+        allButtons.forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.style.transform = 'scale(0.98)';
+            });
+            
+            button.addEventListener('mouseup', () => {
+                button.style.transform = '';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = '';
+            });
+        });
+    </script>
+    
+    <!-- Interactive wave background -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const waveContainer = document.getElementById('wave-background');
+            
+            if (waveContainer) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                waveContainer.appendChild(canvas);
+                
+                // Set canvas size
+                function setCanvasSize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                
+                setCanvasSize();
+                window.addEventListener('resize', setCanvasSize);
+                
+                // Wave properties
+                const waves = [
+                    { y: 0.3, length: 0.5, amplitude: 15, speed: 0.004, color: 'rgba(125, 95, 255, 0.15)' },
+                    { y: 0.4, length: 0.7, amplitude: 20, speed: 0.002, color: 'rgba(155, 135, 255, 0.1)' },
+                    { y: 0.5, length: 0.4, amplitude: 25, speed: 0.001, color: 'rgba(185, 175, 255, 0.08)' }
+                ];
+                
+                let animationFrameId;
+                let time = 0;
+                
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    waves.forEach(wave => {
+                        ctx.fillStyle = wave.color;
+                        ctx.beginPath();
+                        
+                        ctx.moveTo(0, canvas.height);
+                        
+                        // Draw wave
+                        for (let x = 0; x <= canvas.width; x++) {
+                            const dx = x / canvas.width;
+                            const y = Math.sin(dx * Math.PI * 2 * wave.length + time * wave.speed) * 
+                                      wave.amplitude + canvas.height * wave.y;
+                            ctx.lineTo(x, y);
+                        }
+                        
+                        ctx.lineTo(canvas.width, canvas.height);
+                        ctx.fill();
+                    });
+                    
+                    time += 1;
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+                
+                animate();
+                
+                // Clean up on page unload
+                window.addEventListener('beforeunload', () => {
+                    cancelAnimationFrame(animationFrameId);
+                });
+            }
+        });
+    </script>
+    
+    <!-- 3D Tilt effect for cards -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tiltCards = document.querySelectorAll('.tilt-card');
+            
+            tiltCards.forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const xPercent = x / rect.width;
+                    const yPercent = y / rect.height;
+                    
+                    const tiltX = (yPercent - 0.5) * 20; // Up to 10 degrees tilt
+                    const tiltY = (0.5 - xPercent) * 20;
+                    
+                    this.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+                    
+                    // Move content slightly higher for 3D effect
+                    const content = this.querySelector('.tilt-content');
+                    if (content) {
+                        content.style.transform = `translateZ(30px)`;
+                    }
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+                    
+                    const content = this.querySelector('.tilt-content');
+                    if (content) {
+                        content.style.transform = 'translateZ(0)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .mic-button {
+            display: flex;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(108, 99, 255, 0.1);
+            color: #6c63ff;
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            margin-right: 10px;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            height: 40px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Speech Recognition Test</h1>
+        <p>This page tests whether speech recognition works in your browser.</p>
+        
+        <div class="input-container">
+            <button id="mic-button" class="mic-button">🎤</button>
+            <textarea id="result" placeholder="Speech will appear here..."></textarea>
+        </div>
+        
+        <div id="status" class="status">Listening...</div>
+        
+        <div id="debug-info" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+            <h3>Debug Information:</h3>
+            <p id="browser-info"></p>
+            <p id="speech-support"></p>
+            <p id="permission-status"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const micButton = document.getElementById('mic-button');
+            const resultArea = document.getElementById('result');
+            const statusDiv = document.getElementById('status');
+            const browserInfo = document.getElementById('browser-info');
+            const speechSupport = document.getElementById('speech-support');
+            const permissionStatus = document.getElementById('permission-status');
+            
+            // Display browser info
+            browserInfo.textContent = `Browser: ${navigator.userAgent}`;
+            
+            // Check if speech recognition is supported
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                speechSupport.textContent = 'Speech Recognition: Supported ✅';
+                
+                // Initialize speech recognition
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                
+                // Check permission status if available
+                if (navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'microphone' })
+                        .then(result => {
+                            permissionStatus.textContent = `Microphone Permission: ${result.state}`;
+                            
+                            result.onchange = function() {
+                                permissionStatus.textContent = `Microphone Permission: ${this.state}`;
+                            };
+                        })
+                        .catch(err => {
+                            permissionStatus.textContent = `Permission Error: ${err.message}`;
+                        });
+                } else {
+                    permissionStatus.textContent = 'Permissions API not supported';
+                }
+                
+                // Handle recognition results
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    resultArea.value = finalTranscript || interimTranscript;
+                };
+                
+                // Handle start and end
+                recognition.onstart = function() {
+                    statusDiv.classList.add('active');
+                    micButton.style.backgroundColor = 'rgba(255, 99, 71, 0.2)';
+                    micButton.style.borderColor = 'rgba(255, 99, 71, 0.5)';
+                };
+                
+                recognition.onend = function() {
+                    statusDiv.classList.remove('active');
+                    micButton.style.backgroundColor = 'rgba(108, 99, 255, 0.1)';
+                    micButton.style.borderColor = 'rgba(108, 99, 255, 0.3)';
+                };
+                
+                // Handle errors
+                recognition.onerror = function(event) {
+                    statusDiv.classList.remove('active');
+                    micButton.style.backgroundColor = 'rgba(108, 99, 255, 0.1)';
+                    micButton.style.borderColor = 'rgba(108, 99, 255, 0.3)';
+                    
+                    resultArea.value = `Error: ${event.error}`;
+                    console.error('Speech recognition error:', event.error);
+                };
+                
+                // Toggle listening on button click
+                micButton.addEventListener('click', function() {
+                    try {
+                        if (statusDiv.classList.contains('active')) {
+                            recognition.stop();
+                        } else {
+                            recognition.start();
+                        }
+                    } catch (err) {
+                        resultArea.value = `Error starting: ${err.message}`;
+                        console.error('Error toggling recognition:', err);
+                    }
+                });
+                
+            } else {
+                speechSupport.textContent = 'Speech Recognition: Not Supported ❌';
+                micButton.disabled = true;
+                micButton.style.opacity = 0.5;
+                micButton.title = 'Speech recognition not supported in this browser';
+            }
+        });
+    </script>
+</body>
+</html> 

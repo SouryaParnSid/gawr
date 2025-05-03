@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gawr AI - Streamlit Custom</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6c63ff;
+            --primary-dark: #4844aa;
+            --primary-light: #9b97ff;
+            --text-color: #333;
+            --text-light: #666;
+            --background-color: #f9f9fd;
+            --card-bg: #ffffff;
+            --card-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+            --gradient: linear-gradient(135deg, #6c63ff 0%, #844fff 100%);
+            --transition: all 0.3s ease;
+            --font-main: 'Poppins', sans-serif;
+            --border-radius: 12px;
+        }
+
+        .dark-theme {
+            --primary-color: #6c63ff;
+            --primary-light: #9b97ff;
+            --primary-dark: #4844aa;
+            --text-color: #e4e4e4;
+            --text-light: #a0a0a0;
+            --background-color: #1a1a2e;
+            --card-bg: #23233f;
+            --card-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Base element overrides - make Streamlit look better */
+        body, .stApp {
+            font-family: var(--font-main) !important;
+            background-color: var(--background-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Clean up header */
+        header[data-testid="stHeader"] {
+            background-color: transparent !important;
+            border-bottom: 1px solid rgba(49, 51, 63, 0.1) !important;
+        }
+
+        /* Hide hamburger menu and full screen button */
+        button[kind="header"] {
+            display: none !important;
+        }
+
+        /* Main content area */
+        .main .block-container {
+            padding-top: 1rem !important;
+            max-width: 900px !important;
+        }
+
+        /* Chat history area */
+        [data-testid="stVerticalBlock"] {
+            gap: 1.5rem !important;
+        }
+
+        /* Improve text input */
+        .stTextInput > div > div > input {
+            border-radius: 30px !important;
+            border: 2px solid var(--primary-color) !important;
+            padding: 0.7rem 1.5rem !important;
+            font-size: 1rem !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .stTextInput > div > div > input:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.25) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* Enhance buttons */
+        .stButton > button {
+            border-radius: 30px !important;
+            background: var(--gradient) !important;
+            border: none !important;
+            color: white !important;
+            padding: 0.7rem 2rem !important;
+            font-weight: 500 !important;
+            letter-spacing: 0.5px !important;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3) !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .stButton > button:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 25px rgba(108, 99, 255, 0.4) !important;
+        }
+
+        .stButton > button::before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent) !important;
+            transition: all 0.6s ease !important;
+        }
+
+        .stButton > button:hover::before {
+            left: 100% !important;
+        }
+
+        /* Style chat messages */
+        .stMarkdown p, .element-container .stMarkdown {
+            padding: 1rem 1.5rem !important;
+            border-radius: 1rem !important;
+            margin-bottom: 0.5rem !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+            width: fit-content !important;
+            max-width: 85% !important;
+            position: relative !important;
+            line-height: 1.5 !important;
+        }
+
+        /* Animation for messages */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* User messages */
+        [data-testid="stVerticalBlock"] > div:nth-child(odd) .stMarkdown p {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            margin-left: auto !important;
+            border-radius: 1rem 1rem 0 1rem !important;
+            animation: fadeIn 0.3s ease-out forwards !important;
+        }
+
+        /* Bot messages */
+        [data-testid="stVerticalBlock"] > div:nth-child(even) .stMarkdown p {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-radius: 1rem 1rem 1rem 0 !important;
+            border-left: 3px solid var(--primary-color) !important;
+            animation: fadeIn 0.3s ease-out forwards !important;
+            animation-delay: 0.15s !important;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px !important;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05) !important;
+            border-radius: 10px !important;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color) !important;
+            border-radius: 10px !important;
+        }
+
+        /* Avatar for messages */
+        [data-testid="stVerticalBlock"] > div:nth-child(even) .stMarkdown p::before {
+            content: "🤖" !important;
+            position: absolute !important;
+            left: -30px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 1.2rem !important;
+        }
+
+        [data-testid="stVerticalBlock"] > div:nth-child(odd) .stMarkdown p::after {
+            content: "👤" !important;
+            position: absolute !important;
+            right: -30px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 1.2rem !important;
+        }
+
+        /* Improved subheaders */
+        .stSubheader {
+            font-weight: 600 !important;
+            color: var(--primary-color) !important;
+            border-bottom: 2px solid var(--primary-light) !important;
+            padding-bottom: 0.5rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Animation for new content */
+        .element-container {
+            animation: fadeIn 0.5s ease-out forwards !important;
+        }
+
+        /* Typing indicator animation */
+        @keyframes typing {
+            0% { width: 0; }
+            20% { width: 10px; }
+            40% { width: 20px; }
+            60% { width: 30px; }
+            80% { width: 40px; }
+            100% { width: 50px; }
+        }
+
+        /* Add modern background glow effect */
+        .stApp::before {
+            content: "" !important;
+            position: fixed !important;
+            top: -50% !important;
+            left: -50% !important;
+            width: 200% !important;
+            height: 200% !important;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.03) 0%, transparent 70%) !important;
+            z-index: -1 !important;
+            pointer-events: none !important;
+        }
+
+        /* Add ripple effect to interactions */
+        @keyframes ripple {
+            from { transform: scale(0); opacity: 1; }
+            to { transform: scale(2); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    {{ streamlit_content }}
+    
+    <script>
+        // Add ripple effect to button clicks
+        $(document).on('click', '.stButton > button', function(e) {
+            let x = e.clientX - e.target.getBoundingClientRect().left;
+            let y = e.clientY - e.target.getBoundingClientRect().top;
+            
+            let ripple = $('<span></span>');
+            ripple.css({
+                position: 'absolute',
+                top: y + 'px',
+                left: x + 'px',
+                width: '1px',
+                height: '1px',
+                background: 'rgba(255, 255, 255, 0.5)',
+                borderRadius: '50%',
+                transform: 'scale(0)',
+                pointerEvents: 'none'
+            });
+            
+            $(this).append(ripple);
+            
+            setTimeout(() => {
+                ripple.css({
+                    transform: 'scale(100)',
+                    opacity: '0',
+                    transition: 'all 0.6s ease-out'
+                });
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }, 10);
+        });
+        
+        // Add typing indicator when waiting for a response
+        const addTypingIndicator = () => {
+            const responseArea = $('[data-testid="stVerticalBlock"]');
+            const typingIndicator = $('<div class="typing-indicator"><span>•</span><span>•</span><span>•</span></div>');
+            typingIndicator.css({
+                display: 'inline-block',
+                backgroundColor: 'var(--card-bg)',
+                padding: '10px 20px',
+                borderRadius: '20px',
+                marginBottom: '10px',
+                animation: 'fadeIn 0.3s ease-out forwards'
+            });
+            
+            typingIndicator.find('span').css({
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--primary-color)',
+                margin: '0 3px',
+                opacity: 0.4
+            });
+            
+            responseArea.append(typingIndicator);
+            
+            animateTypingIndicator();
+        };
+        
+        const animateTypingIndicator = () => {
+            const spans = $('.typing-indicator span');
+            let i = 0;
+            
+            const interval = setInterval(() => {
+                spans.css('opacity', 0.4);
+                $(spans[i]).css('opacity', 1);
+                i = (i + 1) % spans.length;
+                
+                if (!$('.typing-indicator').length) {
+                    clearInterval(interval);
+                }
+            }, 300);
+        };
+        
+        // Show typing indicator when submitting a message
+        $(document).on('click', '.stButton > button', function() {
+            setTimeout(() => {
+                if (!$('.typing-indicator').length) {
+                    addTypingIndicator();
+                    
+                    // Remove it after response is received (simulated here with timeout)
+                    const checkForNewContent = setInterval(() => {
+                        if ($('[data-testid="stVerticalBlock"] > div').length % 2 === 0) {
+                            $('.typing-indicator').remove();
+                            clearInterval(checkForNewContent);
+                        }
+                    }, 500);
+                }
+            }, 100);
+        });
+        
+        // Enhance user experience with subtle effects
+        $(document).ready(function() {
+            // Add a slight hover effect to the input field
+            $('.stTextInput').hover(
+                function() { $(this).css('transform', 'translateY(-2px)'); },
+                function() { $(this).css('transform', 'translateY(0)'); }
+            );
+            
+            // Add pulsing effect to the button
+            setInterval(() => {
+                $('.stButton > button').animate({ boxShadow: '0 8px 25px rgba(108, 99, 255, 0.6)' }, 1000)
+                    .animate({ boxShadow: '0 4px 15px rgba(108, 99, 255, 0.3)' }, 1000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
