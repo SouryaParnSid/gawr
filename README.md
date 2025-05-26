@@ -132,7 +132,7 @@ start.bat
    or simply run `start.bat` on Windows
 
 2. **Access the web interface**:
-   - The web interface will be available at http://localhost:8000
+   - The web interface will be available at https://gawr-souryas-projects-d7efa3a4.vercel.app/
    - If SSL certificates (cert.pem and key.pem) are detected, HTTPS will be automatically enabled
    - The server handles both the frontend and the API requests
 
